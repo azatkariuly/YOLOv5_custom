@@ -7,6 +7,6 @@ test:  # test images (optional)
 
 # Classes
 names:
-  0: basket
-  1: rim
+  0: rim
+  1: backboard
   2: ball
