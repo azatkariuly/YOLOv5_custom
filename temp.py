@@ -35,7 +35,7 @@ def main():
     critical_point = 0
 
     # Create a video capture object for the input file
-    cap = cv2.VideoCapture(input_file)
+    cap = cv2.VideoCapture(args.input_file)
 
     # Get the frame dimensions and FPS of the input video
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
