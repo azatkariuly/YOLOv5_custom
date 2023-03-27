@@ -27,7 +27,7 @@ def main():
     seconds = 3
 
     score_validation = 0
-    score_detection_threshold = 3
+    score_detection_threshold = 5
 
     checked = False
 
