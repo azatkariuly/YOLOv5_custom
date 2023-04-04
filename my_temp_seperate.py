@@ -1,0 +1,101 @@
+import argparse
+import cv2
+import torch
+import progressbar
+from models.common import DetectMultiBackend
+from utils.dataloaders import LoadImages
+from utils.general import non_max_suppression, scale_boxes
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--weights', nargs='+', type=str, default='best.pt', help='model path or triton URL')
+parser.add_argument('--data', type=str, default='data/coco128.yaml', help='(optional) dataset.yaml path')
+parser.add_argument('--input_file', type=str, default='', help='input file name')
+# parser.add_argument('--output_file', type=str, default='new_video.mp4', help='output file name')
+
+def main():
+    global args
+    args = parser.parse_args()
+
+    # output_file = args.output_file
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = DetectMultiBackend(args.weights, device=device, dnn=False, data=args.data, fp16=False)
+    dataset = LoadImages(args.input_file, img_size=(640,640), stride=32, auto=True, vid_stride=1)
+
+    vid_writer = []
+    vid_writer_checker = []
+
+    seconds_forward = 3
+    seconds_back
+    fps = 30 # must be changed
+
+    score_validation = 0
+    score_detection_threshold = 5
+
+    checked = False
+
+    queue = []
+    critical_point = 0
+
+    bar = progressbar.ProgressBar(maxval=total_frames, \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    bar.start()
+
+
+    for i, (path, im, im0s, vid_cap, s) in enumerate(dataset):
+        bar.update(i+1)
+
+        for v, k in enumerate(vid_writer_checker):
+            if k==0:
+                vid_writer[v].release()
+            elif:
+                vid_writer_checker[v] -= 1
+                vid_writer[v].write(im0s)
+
+        if len(queue) > fps*seconds_back:
+            queue.pop(0)
+        queue.append(im0s)
+
+        im = torch.from_numpy(im).to(model.device)
+        im = im.float()
+        im /= 255
+        if len(im.shape) == 3:
+            im = im[None]  # expand for batch dim
+        pred = model(im, augment=False, visualize=False)
+        pred = non_max_suppression(pred, conf_thres=0.6, iou_thres=0.45, classes=None, agnostic=False, max_det=1000)
+
+        for j, det in enumerate(pred):
+            p, im0, frame = path, im0s.copy(), getattr(dataset, 'frame', 0)
+
+            if 3 in det[:, 5].unique():
+                score_validation += 1
+
+                if score_validation >= score_detection_threshold and not checked:
+                    # cv2 write video
+                    # write 3 seconds from buffer queue
+                    # video
+                    fps = vid_cap.get(cv2.CAP_PROP_FPS)
+                    w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+                    save_path = str(Path(str(len(vid_writer) + 1)).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
+                    vid_writer.append(cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h)))
+
+                    # write from queue buffer
+                    for k in queue:
+                        vid_writer[-1].write(k)
+
+                    #
+                    vid_writer_checker += [fps*seconds_forward]
+            else:
+                checked = False
+                score_validation = 0
+
+    bar.finish()
+
+    cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+    main()
