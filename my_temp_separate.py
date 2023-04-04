@@ -21,6 +21,7 @@ def main():
     # output_file = args.output_file
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print('DEVICE:', device)
 
     model = DetectMultiBackend(args.weights, device=device, dnn=False, data=args.data, fp16=False)
     dataset = LoadImages(args.input_file, img_size=(640,640), stride=32, auto=True, vid_stride=1)
@@ -29,7 +30,7 @@ def main():
     vid_writer_checker = []
 
     seconds_forward = 3
-    seconds_back
+    seconds_back = 3
     fps = 30 # must be changed
 
     score_validation = 0
@@ -40,6 +41,14 @@ def main():
     queue = []
     critical_point = 0
 
+    # Create a video capture object for the input file
+    cap = cv2.VideoCapture(args.input_file)
+
+    # Get the frame dimensions and FPS of the input video
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+
     # bar = progressbar.ProgressBar(maxval=total_frames, \
     #     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     # bar.start()
@@ -48,12 +57,12 @@ def main():
     for i, (path, im, im0s, vid_cap, s) in enumerate(dataset):
         # bar.update(i+1)
 
-        print('Frame:', i)
+        print('Frame:', i, vid_writer_checker)
 
         for v, k in enumerate(vid_writer_checker):
             if k==0:
                 vid_writer[v].release()
-            elif:
+            else:
                 vid_writer_checker[v] -= 1
                 vid_writer[v].write(im0s)
 
@@ -79,12 +88,10 @@ def main():
                     # cv2 write video
                     # write 3 seconds from buffer queue
                     # video
-                    fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                    w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                    h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    print('Score detected..')
 
-                    save_path = str(Path(str(len(vid_writer) + 1)).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
-                    vid_writer.append(cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h)))
+                    # save_path = str(Path(str(len(vid_writer) + 1)).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
+                    vid_writer.append(cv2.VideoWriter(str(len(vid_writer) + 1) + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h)))
 
                     # write from queue buffer
                     for k in queue:
@@ -96,7 +103,11 @@ def main():
                 checked = False
                 score_validation = 0
 
-    bar.finish()
+    # bar.finish()
+
+    for i, v in enumerate(vid_writer_checker):
+        if v > 0:
+            vid_writer[i].release()
 
     cv2.destroyAllWindows()
 
