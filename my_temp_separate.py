@@ -89,6 +89,7 @@ def main():
                     # write 3 seconds from buffer queue
                     # video
                     print('Score detected..')
+                    checked = True
 
                     # save_path = str(Path(str(len(vid_writer) + 1)).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
                     vid_writer.append(cv2.VideoWriter(str(len(vid_writer) + 1) + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height)))
