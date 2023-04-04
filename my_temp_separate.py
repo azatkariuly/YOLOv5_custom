@@ -2,6 +2,7 @@ import argparse
 import cv2
 import torch
 import progressbar
+from pathlib import Path
 from models.common import DetectMultiBackend
 from utils.dataloaders import LoadImages
 from utils.general import non_max_suppression, scale_boxes
@@ -39,13 +40,15 @@ def main():
     queue = []
     critical_point = 0
 
-    bar = progressbar.ProgressBar(maxval=total_frames, \
-        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
-    bar.start()
+    # bar = progressbar.ProgressBar(maxval=total_frames, \
+    #     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    # bar.start()
 
 
     for i, (path, im, im0s, vid_cap, s) in enumerate(dataset):
-        bar.update(i+1)
+        # bar.update(i+1)
+
+        print('Frame:', i)
 
         for v, k in enumerate(vid_writer_checker):
             if k==0:
